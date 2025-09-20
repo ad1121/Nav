@@ -176,7 +176,64 @@
             margin-bottom: 20px;
         }
 
-        .home-button {
+        .redirect-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            z-index: 1000;
+            border-radius: 15px;
+        }
+
+        .redirect-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+
+        .redirect-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .redirect-message {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .redirect-details {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            word-break: break-all;
+        }
+
+        .redirect-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .redirect-button {
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 2px solid rgba(255, 255, 255, 0.5);
@@ -185,11 +242,24 @@
             font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: bold;
         }
 
-        .home-button:hover {
+        .redirect-button:hover {
             background: rgba(255, 255, 255, 0.3);
             border-color: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .redirect-button.primary {
+            background: #fff;
+            color: #27ae60;
+            border-color: #fff;
+        }
+
+        .redirect-button.primary:hover {
+            background: #f8f9fa;
         }
 
         .welcome-screen {
@@ -416,7 +486,25 @@
                     <strong>Site:</strong> <span id="blockedSite"></span><br>
                     <strong>Categoria:</strong> <span id="blockedCategory"></span>
                 </div>
-                <button class="home-button" onclick="goHome()">🏠 Voltar ao Início</button>
+                <button class="redirect-button" onclick="goHome()">🏠 Voltar ao Início</button>
+            </div>
+
+            <div class="redirect-overlay" id="redirectOverlay" style="display: none;">
+                <div class="redirect-icon">✅</div>
+                <div class="redirect-title">Site Verificado!</div>
+                <div class="redirect-message">
+                    Este site foi verificado como seguro e não contém conteúdo de apostas ou jogos de azar.
+                </div>
+                <div class="redirect-details">
+                    <strong>Redirecionando para:</strong><br>
+                    <span id="redirectSite"></span>
+                </div>
+                <div class="redirect-buttons">
+                    <a href="#" class="redirect-button primary" id="openSiteButton" target="_blank">
+                        🌐 Abrir Site
+                    </a>
+                    <button class="redirect-button" onclick="goHome()">🏠 Voltar ao Início</button>
+                </div>
             </div>
 
             <div class="loading" id="loadingScreen" style="display: none;">
@@ -494,6 +582,7 @@
         const browserFrame = document.getElementById('browserFrame');
         const welcomeScreen = document.getElementById('welcomeScreen');
         const blockedOverlay = document.getElementById('blockedOverlay');
+        const redirectOverlay = document.getElementById('redirectOverlay');
         const loadingScreen = document.getElementById('loadingScreen');
         const protectionToggle = document.getElementById('protectionToggle');
         const protectionIndicator = document.getElementById('protectionIndicator');
@@ -572,15 +661,30 @@
                 return;
             }
             
-            // Carregar site
+            // Para sites permitidos, abrir em nova aba em vez de iframe
             const fullUrl = url.startsWith('http') ? url : 'https://' + url;
             urlInput.value = url;
             
             setTimeout(() => {
                 loadingScreen.style.display = 'none';
-                browserFrame.style.display = 'block';
-                browserFrame.src = fullUrl;
-            }, 1500);
+                
+                // Criar página de redirecionamento
+                showRedirectPage(fullUrl);
+            }, 1000);
+        }
+
+        // Mostrar página de redirecionamento para sites seguros
+        function showRedirectPage(url) {
+            loadingScreen.style.display = 'none';
+            redirectOverlay.style.display = 'flex';
+            
+            document.getElementById('redirectSite').textContent = url;
+            document.getElementById('openSiteButton').href = url;
+            
+            // Auto-redirect após 3 segundos
+            setTimeout(() => {
+                window.open(url, '_blank');
+            }, 3000);
         }
 
         // Mostrar página de bloqueio
@@ -605,6 +709,7 @@
         function goHome() {
             browserFrame.style.display = 'none';
             blockedOverlay.style.display = 'none';
+            redirectOverlay.style.display = 'none';
             loadingScreen.style.display = 'none';
             welcomeScreen.style.display = 'flex';
             urlInput.value = '';
