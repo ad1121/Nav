@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navegador Anti-Apostas</title>
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Anti-Apostas">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" id="manifest-placeholder">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .header h1 {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .protection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .protection-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #27ae60;
+            box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+        }
+
+        .blocked-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .url-bar {
+            background: white;
+            margin: 15px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .url-input {
+            flex: 1;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            outline: none;
+            border-radius: 25px;
+        }
+
+        .go-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .go-button:hover {
+            background: #5a67d8;
+        }
+
+        .browser-area {
+            flex: 1;
+            position: relative;
+            background: white;
+            margin: 0 15px 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .browser-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 15px;
+        }
+
+        .blocked-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            z-index: 1000;
+            border-radius: 15px;
+        }
+
+        .blocked-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .blocked-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .blocked-message {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .blocked-details {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .home-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .home-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .welcome-screen {
+            height: 100%;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-icon {
+            font-size: 5rem;
+            margin-bottom: 30px;
+            color: #667eea;
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .welcome-message {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            max-width: 400px;
+        }
+
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .quick-link {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .quick-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .toggle-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+
+        .protection-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #27ae60;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 5px 25px rgba(39, 174, 96, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .protection-toggle.disabled {
+            background: #e74c3c;
+            box-shadow: 0 5px 25px rgba(231, 76, 60, 0.4);
+        }
+
+        .protection-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .install-prompt {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1002;
+        }
+
+        .install-prompt.show {
+            transform: translateY(0);
+        }
+
+        .install-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 15px;
+            }
+            
+            .url-bar {
+                margin: 10px;
+            }
+            
+            .browser-area {
+                margin: 0 10px 10px;
+            }
+            
+            .blocked-overlay {
+                padding: 20px;
+            }
+            
+            .blocked-title {
+                font-size: 1.4rem;
+            }
+            
+            .blocked-message {
+                font-size: 1rem;
+            }
+            
+            .welcome-title {
+                font-size: 1.6rem;
+            }
+            
+            .quick-links {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🛡️ Navegador Protegido</h1>
+            <div class="status-bar">
+                <div class="protection-status">
+                    <div class="protection-indicator" id="protectionIndicator"></div>
+                    <span id="protectionText">Proteção Ativa</span>
+                </div>
+                <div class="blocked-count" id="blockedCount">0 sites bloqueados</div>
+            </div>
+        </div>
+
+        <div class="url-bar">
+            <input type="text" class="url-input" id="urlInput" placeholder="Digite um site para navegar (google.com, youtube.com, etc.)" autocomplete="off">
+            <button class="go-button" id="goButton" onclick="navigateTo()">Ir</button>
+        </div>
+
+        <div class="browser-area">
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon">🛡️</div>
+                <div class="welcome-title">Navegador Seguro</div>
+                <div class="welcome-message">
+                    Este navegador bloqueia automaticamente sites de apostas, cassinos e jogos de azar. 
+                    Digite qualquer site na barra acima para começar a navegar com segurança.
+                </div>
+                <div class="quick-links">
+                    <a href="#" class="quick-link" onclick="navigateToSite('google.com')">🔍 Google</a>
+                    <a href="#" class="quick-link" onclick="navigateToSite('youtube.com')">📺 YouTube</a>
+                    <a href="#" class="quick-link" onclick="navigateToSite('g1.globo.com')">📰 G1</a>
+                    <a href="#" class="quick-link" onclick="navigateToSite('wikipedia.org')">📚 Wikipédia</a>
+                </div>
+            </div>
+            
+            <iframe class="browser-frame" id="browserFrame" style="display: none;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+            
+            <div class="blocked-overlay" id="blockedOverlay" style="display: none;">
+                <div class="blocked-icon">🚫</div>
+                <div class="blocked-title">Site Bloqueado!</div>
+                <div class="blocked-message">
+                    Este site foi identificado como relacionado a apostas, cassinos ou jogos de azar e foi bloqueado para sua proteção.
+                </div>
+                <div class="blocked-details">
+                    <strong>Site:</strong> <span id="blockedSite"></span><br>
+                    <strong>Categoria:</strong> <span id="blockedCategory"></span>
+                </div>
+                <button class="home-button" onclick="goHome()">🏠 Voltar ao Início</button>
+            </div>
+
+            <div class="loading" id="loadingScreen" style="display: none;">
+                <div class="spinner"></div>
+                Carregando site...
+            </div>
+        </div>
+
+        <div class="toggle-container">
+            <button class="protection-toggle" id="protectionToggle" onclick="toggleProtection()" title="Alternar Proteção">
+                🛡️
+            </button>
+        </div>
+
+        <div class="install-prompt" id="installPrompt">
+            <div>📱 Instalar este navegador no seu celular?</div>
+            <button class="install-button" onclick="installApp()">Instalar</button>
+            <button class="install-button" onclick="dismissInstall()">Depois</button>
+        </div>
+    </div>
+
+    <script>
+        // Lista completa de sites de apostas e cassinos
+        const blockedSites = [
+            // Sites de apostas brasileiros populares
+            'bet365.com', 'betano.com', 'sportingbet.com', 'betfair.com', 'rivalo.com',
+            'bet55.com', 'betway.com', 'pinnacle.com', '1xbet.com', 'bodog.com',
+            'betsson.com', 'bwin.com', 'pokerstars.com', '888sport.com', 'william-hill.com',
+            'apostaganha.bet', 'blaze.com', 'stake.com', 'bc.game', 'duelbits.com',
+            'roobet.com', 'rollbit.com', 'gamdom.com', 'thunderpick.com', 'sportsbet.io',
+            
+            // Cassinos online populares
+            'casino.com', 'royalvegas.com', 'jackpotcity.com', 'spin-casino.com',
+            'ruby-fortune.com', 'platinum-play.com', 'lucky-nugget.com', 'cabaret-club.com',
+            'vegas-palms.com', 'red-flush-casino.com', 'crazy-vegas.com', 'golden-tiger-casino.com',
+            
+            // Bingos online
+            'bingo.com', 'tombola.co.uk', 'gala-bingo.co.uk', 'mecca-bingo.com',
+            'sun-bingo.co.uk', 'foxy-bingo.com', '888ladies.com', 'costa-bingo.com',
+            
+            // Poker online
+            'partypoker.com', 'ggpoker.com', 'acr-poker.eu', 'ignition-casino.eu',
+            'americas-cardroom.eu', 'betonline.ag', 'nitrogen-sports.eu', 'coinpoker.com',
+            
+            // Cassinos cripto
+            'primedice.com', 'bitsler.com', 'crypto-games.net', 'bitcasino.io',
+            'cloudbet.com', 'fortunejack.com', 'bitdice.me', 'crypto-loko.com',
+            
+            // Sites de fantasy sports
+            'draftkings.com', 'fanduel.com',
+            
+            // Loteria online
+            'thelotter.com', 'lotto.co.uk', 'lottoland.com', 'wintrillions.com',
+            'lotto247.com', 'multilotto.com', 'redbox-lotto.com', 'giant-lottos.com',
+            
+            // Sites de apostas esportivas internacionais
+            'unibet.com', 'ladbrokes.com', 'coral.co.uk', 'paddypower.com',
+            'skybet.com', 'betfred.com', 'bet-at-home.com', 'interwetten.com',
+            
+            // Mais sites brasileiros e populares
+            'aposta10.com', 'melbet.com', '22bet.com', '1win.com.br', 'parimatch.com.br',
+            'mostbet.com', 'betwinner.com', 'leonbet.com', 'megapari.com', 'vbet.com',
+            
+            // Apostas em eSports
+            'gg.bet', 'lootbet.com', 'vpgame.com', 'rivalry.com', 'arcanebet.com'
+        ];
+
+        // Variáveis do app
+        let protectionEnabled = true;
+        let blockedCount = 0;
+        let deferredPrompt;
+
+        // Elementos DOM
+        const urlInput = document.getElementById('urlInput');
+        const browserFrame = document.getElementById('browserFrame');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const blockedOverlay = document.getElementById('blockedOverlay');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const protectionToggle = document.getElementById('protectionToggle');
+        const protectionIndicator = document.getElementById('protectionIndicator');
+        const protectionText = document.getElementById('protectionText');
+        const blockedCountElement = document.getElementById('blockedCount');
+
+        // PWA Manifest dinâmico
+        const manifest = {
+            name: "Navegador Anti-Apostas",
+            short_name: "Anti-Apostas",
+            description: "Navegador que bloqueia sites de apostas e cassinos",
+            start_url: "/",
+            display: "standalone",
+            background_color: "#667eea",
+            theme_color: "#667eea",
+            orientation: "portrait",
+            icons: [
+                {
+                    src: "data:image/svg+xml;base64," + btoa(`
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="#667eea">
+                            <rect x="20" y="20" width="152" height="152" rx="76" fill="#667eea"/>
+                            <text x="96" y="120" text-anchor="middle" font-size="80" fill="white">🛡️</text>
+                        </svg>
+                    `),
+                    sizes: "192x192",
+                    type: "image/svg+xml"
+                }
+            ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.getElementById('manifest-placeholder').href = manifestURL;
+
+        // Função para verificar se um site está bloqueado
+        function isSiteBlocked(url) {
+            if (!protectionEnabled) return false;
+            
+            try {
+                const domain = new URL(url.startsWith('http') ? url : 'https://' + url).hostname.toLowerCase();
+                return blockedSites.some(blockedSite => 
+                    domain === blockedSite || 
+                    domain.endsWith('.' + blockedSite) ||
+                    domain.includes('bet') ||
+                    domain.includes('casino') ||
+                    domain.includes('poker') ||
+                    domain.includes('bingo') ||
+                    domain.includes('aposta') ||
+                    domain.includes('jogo')
+                );
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // Função para navegar para um site
+        function navigateTo() {
+            const url = urlInput.value.trim();
+            if (!url) return;
+            
+            navigateToSite(url);
+        }
+
+        function navigateToSite(url) {
+            // Limpar tela
+            welcomeScreen.style.display = 'none';
+            blockedOverlay.style.display = 'none';
+            browserFrame.style.display = 'none';
+            loadingScreen.style.display = 'flex';
+            
+            // Verificar se o site está bloqueado
+            if (isSiteBlocked(url)) {
+                setTimeout(() => {
+                    showBlockedPage(url);
+                }, 1000);
+                return;
+            }
+            
+            // Carregar site
+            const fullUrl = url.startsWith('http') ? url : 'https://' + url;
+            urlInput.value = url;
+            
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                browserFrame.style.display = 'block';
+                browserFrame.src = fullUrl;
+            }, 1500);
+        }
+
+        // Mostrar página de bloqueio
+        function showBlockedPage(url) {
+            loadingScreen.style.display = 'none';
+            blockedOverlay.style.display = 'flex';
+            
+            document.getElementById('blockedSite').textContent = url;
+            document.getElementById('blockedCategory').textContent = 'Apostas/Cassino';
+            
+            // Incrementar contador
+            blockedCount++;
+            updateBlockedCount();
+            
+            // Efeito sonoro (vibração no mobile)
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+
+        // Voltar ao início
+        function goHome() {
+            browserFrame.style.display = 'none';
+            blockedOverlay.style.display = 'none';
+            loadingScreen.style.display = 'none';
+            welcomeScreen.style.display = 'flex';
+            urlInput.value = '';
+        }
+
+        // Alternar proteção
+        function toggleProtection() {
+            protectionEnabled = !protectionEnabled;
+            
+            if (protectionEnabled) {
+                protectionToggle.innerHTML = '🛡️';
+                protectionToggle.classList.remove('disabled');
+                protectionIndicator.style.background = '#27ae60';
+                protectionText.textContent = 'Proteção Ativa';
+            } else {
+                protectionToggle.innerHTML = '⚠️';
+                protectionToggle.classList.add('disabled');
+                protectionIndicator.style.background = '#e74c3c';
+                protectionText.textContent = 'Proteção Desativada';
+            }
+        }
+
+        // Atualizar contador de sites bloqueados
+        function updateBlockedCount() {
+            blockedCountElement.textContent = `${blockedCount} sites bloqueados`;
+        }
+
+        // Enter na barra de URL
+        urlInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                navigateTo();
+            }
+        });
+
+        // PWA - Detectar prompt de instalação
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            setTimeout(() => {
+                document.getElementById('installPrompt').classList.add('show');
+            }, 3000);
+        });
+
+        // Instalar PWA
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('App instalado!');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').classList.remove('show');
+                });
+            }
+        }
+
+        // Dispensar instalação
+        function dismissInstall() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
+
+        // Registrar Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'anti-apostas-v1';
+                const urlsToCache = ['/'];
+                
+                self.addEventListener('install', (event) => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME)
+                            .then((cache) => cache.addAll(urlsToCache))
+                    );
+                });
+                
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then((response) => response || fetch(event.request))
+                    );
+                });
+            `;
+            
+            const swBlob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(swBlob);
+            
+            navigator.serviceWorker.register(swUrl)
+                .then(() => console.log('Service Worker registrado'))
+                .catch(err => console.log('Service Worker falhou:', err));
+        }
+
+        // Inicializar app
+        updateBlockedCount();
+        
+        // Easter egg - detectar tentativas de desabilitar proteção
+        let disableAttempts = 0;
+        document.addEventListener('contextmenu', (e) => {
+            disableAttempts++;
+            if (disableAttempts > 3) {
+                alert('🛡️ Tentativa de desabilitar proteção detectada!');
+                disableAttempts = 0;
+            }
+        });
+    </script>
+</body>
+</html>
